@@ -1,38 +1,32 @@
 #include "raylib.h"
 
-#define BLUE_SQUARE \
-    CLITERAL(Color) { 0, 178, 255, 255 }
-#define RED_TRIANGLE \
-    CLITERAL(Color) { 255, 0, 92, 255 }
-#define YELLOW_CIRCLE \
-    CLITERAL(Color) { 251, 230, 71, 255 }
+#define PLAYER_LIFES 5
 
 //------------------------------------
 // Types and Structures Definition
 //------------------------------------
 
-typedef enum GameScreen { LOGO,
-                          TITLE,
-                          GAMEPLAY } GameScreen;
+typedef enum GameScreen {
+    LOGO,
+    TITLE,
+    GAMEPLAY
+} GameScreen;
 
-typedef struct Square {
+typedef struct Player {
     Vector2 position;
+    Vector2 speed;
     Vector2 size;
     Rectangle bounds;
-} Square;
+    int lifes;
+} Player;
 
-typedef struct Triangle {
-    Vector2 v1;
-    Vector2 v2;
-    Vector2 v3;
-    Rectangle bounds;
-} Triangle;
-
-typedef struct Circle {
+// Ball structure
+typedef struct Ball {
     Vector2 position;
-    int radius;
-    Rectangle bounds;
-} Circle;
+    Vector2 speed;
+    float radius;
+    bool active;
+} Ball;
 
 //------------------------------------
 // Program main entry point
@@ -42,8 +36,8 @@ int main() {
     //------------------------------------
     // Initialization
     //------------------------------------
-    const int screenWidth = 1920;
-    const int screenHeight = 1080;
+    const int screenWidth = 750;
+    const int screenHeight = 750;
 
     InitWindow(screenWidth, screenHeight, "Shapes Game");
 
@@ -55,19 +49,24 @@ int main() {
     int framesCounter = 0;    // General purpose frames counter
     bool gamePaused = false;  // Game paused state toggle
 
-    Square square = {0};
-    Triangle triangle = {0};
-    Circle circle = {0};
+    Player player1 = {0};
+    Player player2 = {0};
+    Ball ball = {0};
 
-    square.position = (Vector2){screenWidth / 4, screenHeight / 4 + 220};
-    square.size = (Vector2){100, 100};
+    player1.position = (Vector2){screenWidth / 2, screenHeight * 7 / 8};
+    player1.speed = (Vector2){8.0f, 0.0f};
+    player1.size = (Vector2){100, 24};
+    player1.lifes = PLAYER_LIFES;
 
-    triangle.v1 = (Vector2){screenWidth / 4 + 50, screenHeight / 4};
-    triangle.v2 = (Vector2){screenWidth / 4, screenHeight / 4 + 100};
-    triangle.v3 = (Vector2){screenWidth / 4 + 100, screenHeight / 4 + 100};
+    player2.position = (Vector2){screenWidth / 2, screenHeight * 5 / 8};
+    player2.speed = (Vector2){8.0f, 0.0f};
+    player2.size = (Vector2){100, 24};
+    player2.lifes = PLAYER_LIFES;
 
-    circle.position = (Vector2){screenWidth / 4 + 50, screenHeight / 4 + 500};
-    circle.radius = 50;
+    ball.radius = 10.0f;
+    ball.active = false;
+    ball.position = (Vector2){player1.position.x + player1.size.x / 2, player1.position.y - ball.radius * 2};
+    ball.speed = (Vector2){4.0f, 4.0f};
 
     SetTargetFPS(60);
 
@@ -77,14 +76,12 @@ int main() {
         //------------------------------------
         // Update
         //------------------------------------
-
         switch (screen) {
             case LOGO: {
                 // Update LOGO
-
                 framesCounter++;
 
-                if (framesCounter > 10) {
+                if (framesCounter > 1) {
                     screen = TITLE;  // Change to TITLE screen after 3 seconds
                     framesCounter = 0;
                 }
@@ -129,26 +126,20 @@ int main() {
                     DrawTexture(cpLogo, screenWidth / 2 - cpLogo.width / 2, screenHeight / 2 - cpLogo.height / 2, WHITE);
                 }
             } break;
+
             case TITLE: {
                 DrawText("Press ENTER", screenWidth / 2 - 120, screenHeight / 2 - 200, 50, BLACK);
             } break;
+
             case GAMEPLAY: {
-                DrawRectangle(square.position.x, square.position.y, square.size.x, square.size.y, BLUE_SQUARE);  // Draw player bar
+                DrawLineV((Vector2){(float)100 * i, 0}, (Vector2){(float)100 * i, (float)screenHeight}, LIGHTGRAY);
+                DrawRectangle(square.position.x, square.position.y, square.size.x, square.size.y, BLUE_SQUARE);
+                DrawRectangle(square.position.x, square.position.y, square.size.x, square.size.y, BLUE_SQUARE);
+
                 DrawCircle(circle.position.x, circle.position.y, circle.radius, YELLOW_CIRCLE);
-                DrawTriangle(triangle.v1, triangle.v2, triangle.v3, RED_TRIANGLE);
-
-                // Grid
-                for (int i = 0; i < screenWidth / 100 + 1; i++) {
-                    DrawLineV((Vector2){(float)100 * i, 0}, (Vector2){(float)100 * i, (float)screenHeight}, LIGHTGRAY);
-                }
-
-                for (int i = 0; i < screenHeight / 100 + 1; i++) {
-                    DrawLineV((Vector2){0, (float)100 * i}, (Vector2){(float)screenWidth, (float)100 * i}, LIGHTGRAY);
-                }
-
-                DrawText("Hello World!", screenWidth / 2, screenHeight / 2, 24, LIGHTGRAY);
 
             } break;
+
             default:
                 break;
         }
